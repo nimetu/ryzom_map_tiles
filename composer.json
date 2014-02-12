@@ -1,0 +1,23 @@
+{
+    "name": "nimetu/ryzom_map_tiles",
+    "type": "library",
+    "description": "Bmsite Ryzom Map Tile generator",
+    "keywords": ["ryzom"],
+    "homepage": "http://bmsite.net",
+    "license": "LGPL",
+    "require": {
+        "php": ">=5.3",
+        "pimple/pimple": "dev-master",
+        "symfony/console": "2.4.*@dev"
+    },
+    "require-dev": {
+        "nimetu/ryzom_sheets": "dev-master",
+        "nimetu/ryzom_maps": "dev-master"
+    },
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-0": {
+            "Bmsite": ["src/"]
+        }
+    }
+}
