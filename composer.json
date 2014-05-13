@@ -7,12 +7,12 @@
     "license": "LGPL",
     "require": {
         "php": ">=5.3",
-        "pimple/pimple": "dev-master",
+        "pimple/pimple": "1.x",
         "symfony/console": "2.4.*@dev"
     },
     "require-dev": {
-        "nimetu/ryzom_sheets": "dev-master",
-        "nimetu/ryzom_maps": "dev-master"
+        "nimetu/ryzom_sheets": "1.x",
+        "nimetu/ryzom_maps": "1.x"
     },
     "minimum-stability": "dev",
     "autoload": {
