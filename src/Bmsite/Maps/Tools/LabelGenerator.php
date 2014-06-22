@@ -22,6 +22,13 @@ use Bmsite\Maps\Tiles\TileStorageInterface;
  */
 class LabelGenerator extends BaseTileGenerator
 {
+    /** @var bool */
+    protected $useRegionForce;
+
+    /** @var array */
+    protected $defaultColor;
+
+    /** @var string */
     protected $resourcePath;
 
     /** @var string */
@@ -50,6 +57,9 @@ class LabelGenerator extends BaseTileGenerator
         $this->fontFamily = 'Vera.ttf';
         $this->fontFamilyBold = 'VeraBd.ttf';
         $this->labels = array();
+
+        $this->userRegionForce = false;
+        $this->defaultColor = array(255, 255, 255);
 
         //$this->icon = new Icon('lm_marker');
         //$this->icon->setColor(new Color(0x1b, 0xcf, 0x34));
@@ -81,7 +91,11 @@ class LabelGenerator extends BaseTileGenerator
                     $latLng = new Point($zone['pos'][0], $zone['pos'][1]);
 
                     $p = $this->proj->project($latLng);
-                    $color = $this->getRegionForceColor($zone['regionforce']);
+                    if ($this->useRegionForce) {
+                        $color = $this->getRegionForceColor($zone['regionforce']);
+                    } else {
+                        $color = $this->defaultColor;
+                    }
 
                     $label = new Label();
                     $label->point = $p;
@@ -95,6 +109,14 @@ class LabelGenerator extends BaseTileGenerator
                 }
             }
         }
+    }
+
+    /**
+     * @param bool $state
+     */
+    public function setUseRegionForce($state)
+    {
+        $this->useRegionForce = $state;
     }
 
     /**
@@ -493,7 +515,7 @@ class LabelGenerator extends BaseTileGenerator
             250 => array(150, 50, 150),
         );
         if (!isset($force2color[$force])) {
-            return array(255, 255, 255);
+            return $this->defaultColor;
         }
         return $force2color[$force];
     }

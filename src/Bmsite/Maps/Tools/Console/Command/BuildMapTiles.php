@@ -39,6 +39,9 @@ class BuildMapTiles extends Command
     /** @var string */
     protected $mapname;
 
+    /** @var bool */
+    protected $useRegionForce;
+
     /** @var \Bmsite\Maps\Tiles\FileTileStorage */
     protected $tileStorage;
 
@@ -86,6 +89,12 @@ class BuildMapTiles extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Generate city tiles'
+            )
+            ->addOption(
+                'with-region-color',
+                null,
+                InputOption::VALUE_NONE,
+                'Use region force as region color'
             );
     }
 
@@ -116,6 +125,7 @@ class BuildMapTiles extends Command
 
         $withMap = $input->hasParameterOption('--with-map');
         $withCity = $input->hasParameterOption('--with-city');
+        $withRegionColor = $input->hasParameterOption('--with-region-color');
 
         $output->writeln("=======================");
         $output->writeln("mode = <info>$mapmode</info>");
@@ -229,6 +239,7 @@ class BuildMapTiles extends Command
         $gen->loadLabels($this->helper->get('labels.json.array'));
 
         $gen->setLanguage($lang);
+        $gen->setUseRegionForce($this->withRegionColor);
         $gen->generate($zoneNames, array($minZoom, $maxZoom));
     }
 
