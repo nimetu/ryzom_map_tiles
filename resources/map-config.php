@@ -2,6 +2,7 @@
 
 // map -> image
 return array(
+    'maps_path' => __DIR__.'/maps',
     'maps' => array(
         'world' => 'world.png',
         'cont_newbieland' => 'newbieland_map.png',
@@ -9,6 +10,7 @@ return array(
         'place_matis_island_1' => 'matis_island_map.png',
         'place_matis_island_2' => 'matis_island_2_map.png',
     ),
+    // zones is only used in 'server' mode
     'zones' => array(
         'continent_fyros' => 'fyros_map.png',
         'continent_matis' => 'matis_map.png',
@@ -19,6 +21,38 @@ return array(
         'continent_sources' => 'pr_source_map.png',
         'continent_route_gouffre' => 'pr_route_gouffre_map.png',
         'continent_bagne' => 'pr_bagne_map.png',
+        // almati, aelius, olkern
+        'fyros_island' => '../atys_sp/fyros_island_full_map.png',
+        'matis_island' => '../atys_sp/matis_island_full_map.png',
+        'tryker_island' => '../atys_sp/tryker_island_full_map.png',
+        'zorai_island' => '../atys_sp/zorai_island_full_map.png',
+        // old starter zones
+        'continent_fyros_newbie' => 'fyros_newbie_map.png',
+        'continent_matis_newbie' => 'matis_newbie_map.png',
+        'continent_tryker_newbie' => 'tryker_newbie_map.png',
+        'continent_zorai_newbie' => 'zorai_newbie_map.png',
+        //
+        //'gm_island' => '../gm_island_map.png',
+        //'indoors' => '../indoors_map.png',
+        //'cont_corrupted_moor' => '../corrupted_moor_map.png',
+        //
+        //'region_fyros_island1' => '../atys_sp/fyros_island_1_map.png',
+        //'region_fyros_island2' => '../atys_sp/fyros_island_2_map.png',
+        //'region_fyros_island3' => 'fyros_island_map.png',
+        //
+        //'region_tryker_island1' => '../atys_sp/tryker_island_1_map.png',
+        //'region_tryker_island2' => '../atys_sp/tryker_island_2_map.png',
+        //'region_tryker_island3' => '../atys_sp/tryker_island_3_map.png',
+        //'region_tryker_island4' => '../atys_sp/tryker_island_map.png',
+        //'region_tryker_island5' => '../atys_sp/tryker_island_5_map.png',
+        //
+        //'place_matis_island_3' => '../atys_sp/matis_island_3_map.png',
+        //
+        //'r2_desert' => '../r2_maps/r2_desert_map.png',
+        //'r2_forest' => '../r2_maps/r2_forest_map.png',
+        //'r2_jungle' => '../r2_maps/r2_jungle_map.png',
+        //'r2_lakes' => '../r2_maps/r2_lakes_map.png',
+        //'r2_roots' => '../r2_maps/r2_roots_map.png',
     ),
     'cities' => array(
         'place_pyr' => 'fy_cit_pyr.png',

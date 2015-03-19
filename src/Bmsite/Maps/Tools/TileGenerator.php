@@ -51,32 +51,41 @@ class TileGenerator extends BaseTileGenerator
                 continue;
             }
 
-            // find out map coordinates for base zoom level
-            $zoneBounds = $this->projWorld->getZoneBounds($id);
-
             $this->info("+ loading map {$mapFilename}\n");
             $mapImage = $this->loadImage($mapFilename);
-            $mapImageWidth = imagesx($mapImage);
-            $mapImageHeight = imagesy($mapImage);
-
-            // map image coords at base zoom
-            $zoneLeft = $zoneBounds->left;
-            $zoneBottom = $zoneBounds->bottom;
-            $zoneRight = $zoneBounds->right;
-            $zoneTop = $zoneBounds->top;
-
-            $this->info(
-                ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n"
-            );
-
-            $mapImageWidth = imagesx($mapImage);
-            $mapImageHeight = imagesy($mapImage);
-
-            for ($zoom = $zoomRange[0]; $zoom <= $zoomRange[1]; $zoom++) {
-                $this->mapCutter($mapImage, $zoom, $mapImageWidth, $mapImageHeight, $zoneBounds);
+            if (!$mapImage) {
+                $this->info("error: map '$id' image '${mapImage}' not found\n");
+                continue;
             }
 
-            imagedestroy($mapImage);
+            // find out map coordinates for base zoom level
+            try {
+                $zoneBounds = $this->projWorld->getZoneBounds($id);
+
+                $mapImageWidth = imagesx($mapImage);
+                $mapImageHeight = imagesy($mapImage);
+
+                // map image coords at base zoom
+                $zoneLeft = $zoneBounds->left;
+                $zoneBottom = $zoneBounds->bottom;
+                $zoneRight = $zoneBounds->right;
+                $zoneTop = $zoneBounds->top;
+
+                $this->info(
+                    ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n"
+                );
+
+                $mapImageWidth = imagesx($mapImage);
+                $mapImageHeight = imagesy($mapImage);
+
+                for ($zoom = $zoomRange[0]; $zoom <= $zoomRange[1]; $zoom++) {
+                    $this->mapCutter($mapImage, $zoom, $mapImageWidth, $mapImageHeight, $zoneBounds);
+                }
+
+                imagedestroy($mapImage);
+            } catch(\InvalidArgumentException $ex) {
+                $this->info("exception on map ({$id}): {$ex->getMessage()}\n");
+            }
         }
     }
 

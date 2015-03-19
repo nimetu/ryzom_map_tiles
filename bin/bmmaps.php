@@ -16,6 +16,7 @@ $appRoot = dirname(__DIR__);
 
 $config = include $appRoot.'/resources/map-config.php';
 
+// FIXME: allow to set 'root' path for resources
 $loader = new ResourceLoader();
 $serverZonesFile = $loader->getFilePath('server.json');
 $worldZonesFile = $loader->getFilePath('world.json');

@@ -125,7 +125,7 @@ class BuildMapTiles extends Command
 
         $withMap = $input->hasParameterOption('--with-map');
         $withCity = $input->hasParameterOption('--with-city');
-        $withRegionColor = $input->hasParameterOption('--with-region-color');
+        $withRegionColors = $input->hasParameterOption('--with-region-color');
 
         $output->writeln("=======================");
         $output->writeln("mode = <info>$mapmode</info>");
@@ -177,7 +177,7 @@ class BuildMapTiles extends Command
         if (!empty($lang)) {
             $languages = explode(',', $lang);
             foreach ($languages as $l) {
-                $this->doTextTiles($l, $minTextZoom, $maxTextZoom, $output);
+                $this->doTextTiles($l, $withRegionColors, $minTextZoom, $maxTextZoom, $output);
             }
         }
     }
@@ -203,11 +203,12 @@ class BuildMapTiles extends Command
 
     /**
      * @param string $lang
+     * @param bool $withRegionColors
      * @param int $minZoom
      * @param int $maxZoom
      * @param OutputInterface $output
      */
-    protected function doTextTiles($lang, $minZoom, $maxZoom, OutputInterface $output)
+    protected function doTextTiles($lang, $withRegionColors, $minZoom, $maxZoom, OutputInterface $output)
     {
         $mapname = "lang_{$lang}";
 
@@ -239,7 +240,7 @@ class BuildMapTiles extends Command
         $gen->loadLabels($this->helper->get('labels.json.array'));
 
         $gen->setLanguage($lang);
-        $gen->setUseRegionForce($this->withRegionColor);
+        $gen->setUseRegionForce($withRegionColors);
         $gen->generate($zoneNames, array($minZoom, $maxZoom));
     }
 
