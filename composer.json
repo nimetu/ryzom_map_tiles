@@ -4,7 +4,7 @@
     "description": "Bmsite Ryzom Map Tile generator",
     "keywords": ["ryzom"],
     "homepage": "http://bmsite.net",
-    "license": "LGPL",
+    "license": "LGPL-3.0-or-later",
     "require": {
         "php": ">=5.3",
         "pimple/pimple": "1.x",
