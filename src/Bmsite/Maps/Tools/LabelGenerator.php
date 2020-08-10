@@ -54,8 +54,8 @@ class LabelGenerator extends BaseTileGenerator
         $this->resourcePath = $resourcePath;
 
         $this->lang = 'en';
-        $this->fontFamily = 'Vera.ttf';
-        $this->fontFamilyBold = 'VeraBd.ttf';
+        $this->fontFamily = 'ryzom.ttf';
+        $this->fontFamilyBold = 'ryzom.ttf';
         $this->labels = array();
 
         $this->userRegionForce = false;
