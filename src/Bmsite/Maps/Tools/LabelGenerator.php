@@ -16,6 +16,7 @@ use Bmsite\Maps\BaseTypes\Point;
 use Bmsite\Maps\MapProjection;
 use Bmsite\Maps\StaticMap\Feature\Icon;
 use Bmsite\Maps\Tiles\TileStorageInterface;
+use Ryzom\Sheets\Client\CContLandMark;
 
 /**
  * Class LabelGenerator
@@ -81,11 +82,24 @@ class LabelGenerator extends BaseTileGenerator
     /**
      * @param array $labels
      */
-    public function loadLabels($labels)
+    public function loadLabels($labels, array $zones = array())
     {
         $this->labels = array();
         foreach ($labels as $parent => $childs) {
+            $skip = isset($zones['*']) && $zones['*'] !== true;
+            if (isset($zones[$parent])) {
+                $skip = $zones[$parent] === false;
+            }
+            if ($skip) {
+                echo "- skip $parent\n";
+                continue;
+            }
             foreach ($childs as $id => $zone) {
+                if (isset($zones[$parent][$id]) && $zones[$parent][$id] === false) {
+                    echo "- skip $parent/{$id}\n";
+                    continue;
+                }
+
                 try {
                     $type = $zone['lmtype'];
                     $latLng = new Point($zone['pos'][0], $zone['pos'][1]);
@@ -106,6 +120,7 @@ class LabelGenerator extends BaseTileGenerator
                     $this->labels[$parent][$type][$id] = $label;
                 } catch (\InvalidArgumentException $e) {
                     /* unknown zone coords */
+                    echo "! unknown zone ".$e->getMessage()."\n";
                 }
             }
         }
@@ -128,18 +143,15 @@ class LabelGenerator extends BaseTileGenerator
     }
 
     /**
-     * @param array $maps
      * @param array $zoomRange
+     * @param array $maps      not used, maps are read from labels property
      */
-    public function generate($maps, $zoomRange)
+    public function generate(array $zoomRange, array $maps = array())
     {
-        foreach ($maps as $zone) {
-            if (!isset($this->labels[$zone])) {
-                continue;
-            }
+        foreach ($this->labels as $zone => $data) {
             $this->info("+ {$zone}\033[K\n");
 
-            $this->processMapLabels($this->labels[$zone], $zoomRange);
+            $this->processMapLabels($data, $zoomRange);
         }
     }
 
@@ -158,6 +170,7 @@ class LabelGenerator extends BaseTileGenerator
 
                 $style = $this->getFontSize($lmType, $zoom);
 
+                // TODO: $showLabel = $this->isLabelVisible($lmType, $zoom);
                 $showLabel = $style['fontSize'] > 0;
                 $showIcon = $this->isIconVisible($lmType, $zoom);
                 if ($showLabel || $showIcon) {
@@ -449,6 +462,30 @@ class LabelGenerator extends BaseTileGenerator
 
         $data = $iconVisibility[$type];
         return $zoom >= $data[0] && $zoom <= $data[1];
+    }
+
+    /**
+     * Return true if label type should be visible at zoom level
+     *
+     * @param int type
+     * @param int zoom
+     * @return bool
+     */
+    protected function isLabelVisible($type, $zoom) {
+        $fMeterPerPixel = 1024 / pow(2,$zoom);
+        //
+        switch($type) {
+            case CContLandMark::CAPITAL: print("+ CAPITAL: visible $type, $zoom\n"); return $fMeterPerPixel <= 5.0;
+            case CContLandMark::VILLAGE: print("+ VILLAGE: visible $type, $zoom\n"); return $fMeterPerPixel <= 4.0;
+            case CContLandMark::OUTPOST: print("+ OUTPOST: visible $type, $zoom\n"); return $fMeterPerPixel <= 4.0;
+            case CContLandMark::STABLE:  print("+ STABLE: visible $type, $zoom\n");  return $fMeterPerPixel <= 3.5;
+            //
+            case CContLandMark::REGION:  print("+ REGION: visible $type, $zoom\n");  return $fMeterPerPixel <= 50.0;
+            case CContLandMark::PLACE:   print("+ PLACE: visible $type, $zoom\n");   return $fMeterPerPixel <= 6.0;
+            case CContLandMark::STREET:  print("+ STREET: visible $type, $zoom\n");  return $fMeterPerPixel <= 2.0;
+            default:                     print("+ default $type, $zoom\n");          return true;
+        }
+        return false;
     }
 
     /**

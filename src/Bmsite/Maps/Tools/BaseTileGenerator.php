@@ -14,7 +14,7 @@ use Bmsite\Maps\Tiles\TileStorageInterface;
 /**
  * Class BaseTileGenerator
  */
-class BaseTileGenerator
+abstract class BaseTileGenerator
 {
     /** @var bool */
     protected $debug = false;
@@ -129,6 +129,16 @@ class BaseTileGenerator
     {
         $this->tileStorage->set($z, $x, $y, $img);
     }
+
+    /**
+     * Generate map tiles
+     *
+     * @param array $zoomRange [ min, max]
+     * @param array $maps [ id => map.png ]
+     *
+     * @return void
+     */
+    abstract public function generate(array $zoomRange, array $maps = array());
 
     /**
      * @param $msg

@@ -38,10 +38,10 @@ class TileGenerator extends BaseTileGenerator
     /**
      * Generate map tiles
      *
-     * @param array $maps [ id => map.png ]
      * @param array $zoomRange [ min, max]
+     * @param array $maps [ id => map.png ]
      */
-    public function generate(array $maps, array $zoomRange)
+    public function generate(array $zoomRange, array $maps = array())
     {
         foreach ($maps as $id => $mapImage) {
             // load map file
@@ -74,9 +74,6 @@ class TileGenerator extends BaseTileGenerator
                 $this->info(
                     ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n"
                 );
-
-                $mapImageWidth = imagesx($mapImage);
-                $mapImageHeight = imagesy($mapImage);
 
                 for ($zoom = $zoomRange[0]; $zoom <= $zoomRange[1]; $zoom++) {
                     $this->mapCutter($mapImage, $zoom, $mapImageWidth, $mapImageHeight, $zoneBounds);
@@ -175,7 +172,7 @@ class TileGenerator extends BaseTileGenerator
                     $pad_b = ceil($ty2 - $bottom);
                 }
                 $this->debug(
-                    ">> (xTile:$xTile, yTile:$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n"
+                    ">> (tile:".($leftTile + $xTile)."/".($topTile + $yTile)." ($xTile,$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n"
                 );
 
                 $dstWidth = TileStorageInterface::TILE_SIZE - $pad_r - $pad_l;

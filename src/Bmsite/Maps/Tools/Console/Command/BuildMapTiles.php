@@ -23,6 +23,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class BuildMapTiles extends Command
 {
+    /** @var array */
+    protected $config;
 
     /** @var  MapProjection */
     protected $proj;
@@ -44,6 +46,9 @@ class BuildMapTiles extends Command
 
     /** @var \Bmsite\Maps\Tiles\FileTileStorage */
     protected $tileStorage;
+
+    /** @var string[] */
+    protected $zones = array();
 
     protected function configure()
     {
@@ -70,6 +75,13 @@ class BuildMapTiles extends Command
                 InputOption::VALUE_REQUIRED,
                 'Path to input map names (world.jpg, newbieland.jpg, etc)',
                 'app/resources/maps/atys'
+            )
+            ->addOption(
+                'zones',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Comma separated list of zones to generate',
+                join(',', $this->zones),
             )
             ->addOption(
                 'lang',
@@ -135,17 +147,17 @@ class BuildMapTiles extends Command
             throw new \InvalidArgumentException("Use --with-map, --with-city, --lang options\n");
         }
 
-        $config = $this->helper->get('map-config');
+        $this->config = $this->helper->get('map-config');
 
         $this->proj = new MapProjection();
         $this->proj->setServerZones($this->helper->get('server.json.array'));
 
-        $maps = $config['maps'];
+        $maps = $this->config['maps'];
         if ($mapmode == 'world') {
             $this->proj->setWorldZones($this->helper->get('world.json.array'));
         } else {
             // include individual zone map
-            $maps = array_merge($maps, $config['zones']);
+            $maps = array_merge($maps, $this->config['zones']);
             unset($maps['world']);
 
             $this->proj->setWorldZones(array('grid' => array(array(0, 47520), array(108000, 0))));
@@ -156,25 +168,29 @@ class BuildMapTiles extends Command
 
         $this->tileStorage = $this->helper->get('tilestorage');
 
-        // map tiles
-        $minMapZoom = 1;
-        $maxMapZoom = 11;
-        // city map on world image
-        $minCityZoom = 10;
-        $maxCityZoom = 11;
-        // text tiles
-        $minTextZoom = 5;
-        $maxTextZoom = 12;
+        $zones = $input->getOption('zones');
+        if (!empty($zones)) {
+            $this->zones = explode(',', $zones);
+        }
 
         // generate tiles for world map zone placement
         if ($withMap) {
+            // map tiles
+            $minMapZoom = $this->config['map-zoom']['min'];
+            $maxMapZoom = $this->config['map-zoom']['max'];
             $this->doMaps($maps, $minMapZoom, $maxMapZoom, $output);
         }
         if ($withCity) {
-            $this->doMaps($config['cities'], $minCityZoom, $maxCityZoom, $output);
+            // city map on world image
+            $minCityZoom = $this->config['city-zoom']['min'];
+            $maxCityZoom = $this->config['city-zoom']['max'];
+            $this->doMaps($this->config['cities'], $minCityZoom, $maxCityZoom, $output);
         }
 
         if (!empty($lang)) {
+            // text tiles
+            $minTextZoom = $this->config['text-zoom']['min'];
+            $maxTextZoom = $this->config['text-zoom']['max'];
             $languages = explode(',', $lang);
             foreach ($languages as $l) {
                 $this->doTextTiles($l, $withRegionColors, $minTextZoom, $maxTextZoom, $output);
@@ -198,7 +214,7 @@ class BuildMapTiles extends Command
 
         $gen = new TileGenerator($this->mapdir, $this->proj);
         $gen->setTileStorage($this->tileStorage);
-        $gen->generate($maps, array($minZoom, $maxZoom));
+        $gen->generate(array($minZoom, $maxZoom), $maps);
     }
 
     /**
@@ -216,32 +232,22 @@ class BuildMapTiles extends Command
 
         $resources = $this->helper->get('app.path').'/resources';
 
-        $zoneNames = array(
-            'fyros',
-            'matis',
-            'tryker',
-            'zorai',
-            'bagne',
-            'sources',
-            'route_gouffre',
-            'terre',
-            'nexus',
-            'newbieland',
-            'kitiniere',
-            'matis_island'
-        );
-
         $this->tileStorage->setMapMode($this->mapmode);
         $this->tileStorage->setMapName($mapname);
         $this->tileStorage->setImageExt('png');
 
         $gen = new LabelGenerator($this->proj, $resources);
         $gen->setTileStorage($this->tileStorage);
-        $gen->loadLabels($this->helper->get('labels.json.array'));
+
+        $filter = $this->config['labels'];
+        if ($this->mapmode === 'server') {
+            $filter = isset($this->config['server-labels']) ? $this->config['server-labels'] : array();
+        }
+        $gen->loadLabels($this->helper->get('labels.json.array'), $filter);
 
         $gen->setLanguage($lang);
         $gen->setUseRegionForce($withRegionColors);
-        $gen->generate($zoneNames, array($minZoom, $maxZoom));
+        $gen->generate(array($minZoom, $maxZoom));
     }
 
 }
