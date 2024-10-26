@@ -34,7 +34,7 @@ return array(
         //
         //'gm_island' => '../gm_island_map.png',
         //'indoors' => '../indoors_map.png',
-        //'cont_corrupted_moor' => '../corrupted_moor_map.png',
+        'cont_corrupted_moor' => 'corrupted_moor_map.png',
         //
         //'region_fyros_island1' => '../atys_sp/fyros_island_1_map.png',
         //'region_fyros_island2' => '../atys_sp/fyros_island_2_map.png',
