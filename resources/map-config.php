@@ -73,5 +73,7 @@ return array(
         'place_jen_lai' => 'zo_cit_jen_lai.png',
         'place_min_cho' => 'zo_cit_min_cho.png',
         'place_zora' => 'zo_cit_zora.png',
+        //
+        'place_starting_zone_starting_city' => 'newbieland_city.png',
     )
 );
