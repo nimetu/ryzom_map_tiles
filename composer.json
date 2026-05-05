@@ -6,7 +6,7 @@
     "homepage": "http://bmsite.net",
     "license": "LGPL-3.0-or-later",
     "require": {
-        "php": ">=5.3",
+        "php": ">=8.3",
         "pimple/pimple": "1.x",
         "symfony/console": "2.4.*@dev"
     },
