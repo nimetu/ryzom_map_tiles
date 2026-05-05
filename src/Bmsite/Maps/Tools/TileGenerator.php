@@ -54,7 +54,7 @@ class TileGenerator extends BaseTileGenerator
             $this->info("+ loading map {$mapFilename}\n");
             $mapImage = $this->loadImage($mapFilename);
             if (!$mapImage) {
-                $this->info("error: map '$id' image '${mapImage}' not found\n");
+                $this->info("error: map '$id' image '${mapFilename}' not found\n");
                 continue;
             }
 
