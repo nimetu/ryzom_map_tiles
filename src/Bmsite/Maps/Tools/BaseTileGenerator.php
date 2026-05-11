@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Ryzom Map Tiles
  *
@@ -10,43 +13,28 @@
 namespace Bmsite\Maps\Tools;
 
 use Bmsite\Maps\Tiles\TileStorageInterface;
+use GdImage;
 
-/**
- * Class BaseTileGenerator
- */
 abstract class BaseTileGenerator
 {
-    /** @var bool */
-    protected $debug = false;
+    protected bool $debug = false;
 
-    /** @var \Bmsite\Maps\Tiles\TileStorageInterface */
-    protected $tileStorage;
+    protected TileStorageInterface $tileStorage;
 
-    /**
-     * @param TileStorageInterface $tileStorage
-     */
     public function setTileStorage(TileStorageInterface $tileStorage)
     {
         $this->tileStorage = $tileStorage;
     }
 
-    /**
-     * @param bool $v
-     */
-    public function setDebug($v)
+    public function setDebug(bool $v)
     {
-        $this->debug = (bool)$v;
+        $this->debug = $v;
     }
 
     /**
      * Create new empty and transparent tile
-     *
-     * @param int $width
-     * @param int $height
-     *
-     * @return resource
      */
-    public function createTile($width = TileStorageInterface::TILE_SIZE, $height = TileStorageInterface::TILE_SIZE)
+    public function createTile(int $width = TileStorageInterface::TILE_SIZE, int $height = TileStorageInterface::TILE_SIZE): GdImage
     {
         $out = imagecreatetruecolor($width, $height);
         $tc = imagecolorallocatealpha($out, 0, 0, 0, 127);
@@ -58,37 +46,29 @@ abstract class BaseTileGenerator
 
     /**
      * Load image from jpg or png file
-     *
-     * @param string $imgFile
-     *
-     * @return resource
      */
-    public function loadImage($imgFile)
+    public function loadImage(string $imgFile): ?GdImage
     {
         if (!file_exists($imgFile)) {
-            return false;
+            return null;
         }
-        if (substr($imgFile, -3) == 'jpg') {
+        if (substr($imgFile, -3) === 'jpg') {
             // reuse existing tile for background
-            $out = @imagecreatefromjpeg($imgFile);
+            $out = imagecreatefromjpeg($imgFile);
         } else {
-            $out = @imagecreatefrompng($imgFile);
+            $out = imagecreatefrompng($imgFile);
         }
-        return $out;
+        return $out === false ? null : $out;
     }
 
-    /**
-     * @param resource $img
-     * @param string $imgFile
-     */
-    public function saveImage($img, $imgFile)
+    public function saveImage(GdImage $img, string $imgFile)
     {
         $path = dirname($imgFile);
-        if (!file_exists($path) && !mkdir($path, 0775, true)) {
+        if (!file_exists($path) && !mkdir($path, 0o775, true)) {
             die("- unable to create destination directory ($path), abort\n");
         }
 
-        if (substr($imgFile, -3) == 'jpg') {
+        if (substr($imgFile, -3) === 'jpg') {
             imagejpeg($img, $imgFile, 85);
         } else {
             imagepng($img, $imgFile, 9);
@@ -99,15 +79,8 @@ abstract class BaseTileGenerator
     /**
      * Load tile image from file
      * If tile file is not found, then create new empty tile
-     *
-     * @param int $z
-     * @param int $x
-     * @param int $y
-     * @param bool $createIfEmpty
-     *
-     * @return bool
      */
-    public function loadTileImage($z, $x, $y, $createIfEmpty = true)
+    public function loadTileImage(int $z, int $x, int $y, bool $createIfEmpty = true): ?GdImage
     {
         $out = $this->tileStorage->get($z, $x, $y);
         if (!$out && $createIfEmpty) {
@@ -119,13 +92,8 @@ abstract class BaseTileGenerator
 
     /**
      * Save image to image file
-     *
-     * @param int $z
-     * @param int $x
-     * @param int $y
-     * @param resource $img
      */
-    public function saveTileImage($z, $x, $y, $img)
+    public function saveTileImage(int $z, int $x, int $y, GdImage $img)
     {
         $this->tileStorage->set($z, $x, $y, $img);
     }
@@ -140,13 +108,8 @@ abstract class BaseTileGenerator
      */
     abstract public function generate(array $zoomRange, array $maps = array());
 
-    /**
-     * @param $msg
-     * @param ...
-     */
-    protected function info($msg)
+    protected function info(string $msg, string|int|float ...$args)
     {
-        $args = array_slice(func_get_args(), 1);
         if (!empty($args)) {
             vprintf($msg, $args);
         } else {
@@ -154,17 +117,12 @@ abstract class BaseTileGenerator
         }
     }
 
-    /**
-     * @param $msg
-     * @param ...
-     */
-    protected function debug($msg)
+    protected function debug(string $msg, string|int|float ...$args)
     {
         if (!$this->debug) {
             return;
         }
         $msg = 'DBG:'.$msg;
-        $args = array_slice(func_get_args(), 1);
         if (!empty($args)) {
             vprintf($msg, $args);
         } else {

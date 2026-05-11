@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Ryzom Map Tiles
  *
@@ -122,7 +125,7 @@ class BuildMapTiles extends Command
         $this->helper = $this->getHelper('resource');
 
         $mapmode = strtolower($input->getOption('mapmode'));
-        if (!in_array($mapmode, array('world', 'server'))) {
+        if (!in_array($mapmode, array('world', 'server'), true)) {
             throw new \InvalidArgumentException("--mapmode must be 'world' or 'server'");
         }
 
@@ -131,7 +134,7 @@ class BuildMapTiles extends Command
         $this->mapdir = $input->getOption('mapdir');
         $lang = $input->getOption('lang');
 
-        if ($this->mapdir[0] != '/') {
+        if ($this->mapdir[0] !== '/') {
             $this->mapdir = $this->helper->get('app.path').'/'.$this->mapdir;
         }
 
@@ -153,7 +156,7 @@ class BuildMapTiles extends Command
         $this->proj->setServerZones($this->helper->get('server.json.array'));
 
         $maps = $this->config['maps'];
-        if ($mapmode == 'world') {
+        if ($mapmode === 'world') {
             $this->proj->setWorldZones($this->helper->get('world.json.array'));
         } else {
             // include individual zone map

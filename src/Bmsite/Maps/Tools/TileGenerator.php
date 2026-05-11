@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Ryzom Map Tiles
  *
@@ -12,7 +15,7 @@ namespace Bmsite\Maps\Tools;
 use Bmsite\Maps\BaseTypes\Bounds;
 use Bmsite\Maps\MapProjection;
 use Bmsite\Maps\Tiles\TileStorageInterface;
-
+use GdImage;
 
 /**
  * Class TileGenerator
@@ -41,20 +44,20 @@ class TileGenerator extends BaseTileGenerator
      * @param array $zoomRange [ min, max]
      * @param array $maps [ id => map.png ]
      */
-    public function generate(array $zoomRange, array $maps = array())
+    public function generate(array $zoomRange, array $maps = [])
     {
         foreach ($maps as $id => $mapImage) {
             // load map file
             $mapFilename = $this->mapsDirectory.'/'.$mapImage;
             if (!file_exists($mapFilename)) {
-                $this->info("- map file '${id}:${mapFilename}' not found, skip\n");
+                $this->info("- map file '{$id}:{$mapFilename}' not found, skip\n");
                 continue;
             }
 
             $this->info("+ loading map {$mapFilename}\n");
             $mapImage = $this->loadImage($mapFilename);
             if (!$mapImage) {
-                $this->info("error: map '$id' image '${mapFilename}' not found\n");
+                $this->info("error: map '$id' image '{$mapFilename}' not found\n");
                 continue;
             }
 
@@ -86,14 +89,7 @@ class TileGenerator extends BaseTileGenerator
         }
     }
 
-    /**
-     * @param resource $mapImage
-     * @param int $zoom
-     * @param int $mapImageWidth
-     * @param int $mapImageHeight
-     * @param Bounds $zoneBounds
-     */
-    protected function mapCutter($mapImage, $zoom, $mapImageWidth, $mapImageHeight, $zoneBounds)
+    protected function mapCutter(GdImage $mapImage, int $zoom, int $mapImageWidth, int $mapImageHeight, Bounds $zoneBounds)
     {
         // map image coords at base zoom
         $zoneLeft = $zoneBounds->left;
@@ -160,16 +156,16 @@ class TileGenerator extends BaseTileGenerator
                 $pad_r = 0;
                 $pad_b = 0;
                 if ($tx1 < $left) {
-                    $pad_l = floor($left - $tx1);
+                    $pad_l = (int)floor($left - $tx1);
                 }
                 if ($ty1 < $top) {
-                    $pad_t = floor($top - $ty1);
+                    $pad_t = (int)floor($top - $ty1);
                 }
                 if ($tx2 > $right) {
-                    $pad_r = ceil($tx2 - $right);
+                    $pad_r = (int)ceil($tx2 - $right);
                 }
                 if ($ty2 > $bottom) {
-                    $pad_b = ceil($ty2 - $bottom);
+                    $pad_b = (int)ceil($ty2 - $bottom);
                 }
                 $this->debug(
                     ">> (tile:".($leftTile + $xTile)."/".($topTile + $yTile)." ($xTile,$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n"
@@ -178,8 +174,8 @@ class TileGenerator extends BaseTileGenerator
                 $dstWidth = TileStorageInterface::TILE_SIZE - $pad_r - $pad_l;
                 $dstHeight = TileStorageInterface::TILE_SIZE - $pad_b - $pad_t;
 
-                $cw = $dstWidth * $scaleWidth;
-                $ch = $dstHeight * $scaleHeight;
+                $cw = intval($dstWidth * $scaleWidth);
+                $ch = intval($dstHeight * $scaleHeight);
 
                 $this->debug(
                     ">> copy from (%d, %d):(%d,%d) to tile (%d, %d):(%d,%d)\n",
@@ -193,7 +189,7 @@ class TileGenerator extends BaseTileGenerator
                     $dstHeight
                 );
 
-                $out = $this->loadTileImage($zoom, $leftTile + $xTile, $topTile + $yTile);
+                $out = $this->loadTileImage($zoom, intval($leftTile + $xTile), intval($topTile + $yTile));
 
                 imagecopyresampled(
                     $out,
@@ -216,7 +212,7 @@ class TileGenerator extends BaseTileGenerator
                     imagerectangle($out, $pad_l, $pad_t, $pad_l + $dstWidth, $pad_t + $dstHeight, $c);
                 }
 
-                $this->saveTileImage($zoom, $leftTile + $xTile, $topTile + $yTile, $out);
+                $this->saveTileImage($zoom, intval($leftTile + $xTile), intval($topTile + $yTile), $out);
 
                 $y1 += $ch;
             }
