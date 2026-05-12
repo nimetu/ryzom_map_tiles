@@ -34,8 +34,10 @@ abstract class BaseTileGenerator
     /**
      * Create new empty and transparent tile
      */
-    public function createTile(int $width = TileStorageInterface::TILE_SIZE, int $height = TileStorageInterface::TILE_SIZE): GdImage
-    {
+    public function createTile(
+        int $width = TileStorageInterface::TILE_SIZE,
+        int $height = TileStorageInterface::TILE_SIZE,
+    ): GdImage {
         $out = imagecreatetruecolor($width, $height);
         $tc = imagecolorallocatealpha($out, 0, 0, 0, 127);
         imagefill($out, 0, 0, $tc);
@@ -122,7 +124,7 @@ abstract class BaseTileGenerator
         if (!$this->debug) {
             return;
         }
-        $msg = 'DBG:'.$msg;
+        $msg = 'DBG:' . $msg;
         if (!empty($args)) {
             vprintf($msg, $args);
         } else {

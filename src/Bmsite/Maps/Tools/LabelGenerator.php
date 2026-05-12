@@ -30,30 +30,30 @@ class LabelGenerator extends BaseTileGenerator
 
     protected Icon $icon;
 
-	protected string $lang = 'en';
+    protected string $lang = 'en';
 
-	protected string $fontFamily = 'ryzom.ttf';
+    protected string $fontFamily = 'ryzom.ttf';
 
-	protected string $fontFamilyBold = 'ryzom.ttf';
+    protected string $fontFamilyBold = 'ryzom.ttf';
 
-	/**
-	 * Zone labels grouped by type
-	 *
-	 * @var array<string,list<Label>>
-	 */
-	protected array $labels = [];
+    /**
+     * Zone labels grouped by type
+     *
+     * @var array<string,list<Label>>
+     */
+    protected array $labels = [];
 
-	/** @var array<string,array<string,string>> */
-	protected array $translations = [];
+    /** @var array<string,array<string,string>> */
+    protected array $translations = [];
 
     /**
      * @param MapProjection $proj
      * @param string $resourcePath
      */
-	public function __construct(
-		protected MapProjection $proj,
-		protected string $resourcePath)
-    {
+    public function __construct(
+        protected MapProjection $proj,
+        protected string $resourcePath,
+    ) {
         $this->defaultColor = new Color(255, 255, 255);
 
         //$this->icon = new Icon('lm_marker');
@@ -68,14 +68,14 @@ class LabelGenerator extends BaseTileGenerator
     public function getFont($isBold = false)
     {
         if ($isBold) {
-            return $this->resourcePath.'/fonts/'.$this->fontFamilyBold;
+            return $this->resourcePath . '/fonts/' . $this->fontFamilyBold;
         }
-        return $this->resourcePath.'/fonts/'.$this->fontFamily;
+        return $this->resourcePath . '/fonts/' . $this->fontFamily;
     }
 
     public function loadLabels(array $labels, array $zones = array())
-	{
-		$this->translations = [];
+    {
+        $this->translations = [];
 
         $this->labels = array();
         foreach ($labels as $parent => $childs) {
@@ -108,14 +108,14 @@ class LabelGenerator extends BaseTileGenerator
                     $label->point = $p;
                     $label->color = $color;
                     $label->text = $id;
-					$label->type = $type;
+                    $label->type = $type;
 
-					$this->translations[$id] = $zone['text'];
+                    $this->translations[$id] = $zone['text'];
 
-					$this->labels[$parent][$type][] = $label;
+                    $this->labels[$parent][$type][] = $label;
                 } catch (\InvalidArgumentException $e) {
                     /* unknown zone coords */
-                    echo "! unknown zone ".$e->getMessage()."\n";
+                    echo '! unknown zone ' . $e->getMessage() . "\n";
                 }
             }
         }
@@ -188,7 +188,7 @@ class LabelGenerator extends BaseTileGenerator
             // center point in grid
             $point = new Point($label->point->x * $scale, $label->point->y * $scale);
 
-			$text = $this->translations[$label->text][$this->lang];
+            $text = $this->translations[$label->text][$this->lang];
 
             // center tile
             $txHome = floor($point->x / TileStorageInterface::TILE_SIZE);
@@ -198,8 +198,8 @@ class LabelGenerator extends BaseTileGenerator
             --$count;
 
             // label position relative to tile
-            $cx = $point->x - $txHome * TileStorageInterface::TILE_SIZE;
-            $cy = $point->y - $tyHome * TileStorageInterface::TILE_SIZE;
+            $cx = $point->x - ($txHome * TileStorageInterface::TILE_SIZE);
+            $cy = $point->y - ($tyHome * TileStorageInterface::TILE_SIZE);
             $this->debug("+ ($id:$text) $point ($txHome, $tyHome) -> cx/cy [$cx, $cy]\n");
 
             $bbox = $this->getTextDimensions($style, $text);
@@ -214,14 +214,17 @@ class LabelGenerator extends BaseTileGenerator
             // work image
             $canvas = $this->createTile(
                 intval($xTiles * TileStorageInterface::TILE_SIZE),
-                intval($yTiles * TileStorageInterface::TILE_SIZE)
+                intval($yTiles * TileStorageInterface::TILE_SIZE),
             );
 
             // load tiles that needs to be modified
-            $this->loadCanvas($canvas, $zoom, (int)$tx1, (int)$ty1, (int)$xTiles, (int)$yTiles);
+            $this->loadCanvas($canvas, $zoom, (int) $tx1, (int) $ty1, (int) $xTiles, (int) $yTiles);
 
             // label position relative to canvas
-            $p = new Point($cx + ($txHome - $tx1) * TileStorageInterface::TILE_SIZE, $cy + ($tyHome - $ty1) * TileStorageInterface::TILE_SIZE);
+            $p = new Point(
+                $cx + (($txHome - $tx1) * TileStorageInterface::TILE_SIZE),
+                $cy + (($tyHome - $ty1) * TileStorageInterface::TILE_SIZE),
+            );
             if ($withIcon) {
                 $this->drawIcon($canvas, $p);
             }
@@ -230,7 +233,7 @@ class LabelGenerator extends BaseTileGenerator
             }
 
             // now save those tiles back
-            $this->saveCanvas($canvas, $zoom, (int)$tx1, (int)$ty1, (int)$xTiles, (int)$yTiles);
+            $this->saveCanvas($canvas, $zoom, (int) $tx1, (int) $ty1, (int) $xTiles, (int) $yTiles);
         }
     }
 
@@ -247,9 +250,9 @@ class LabelGenerator extends BaseTileGenerator
         $w = imagesx($icon);
         $h = imagesy($icon);
 
-        $x = $point->x - $w / 2;
-        $y = $point->y - $h / 2;
-        imagecopy($dst, $icon, (int)$x, (int)$y, 0, 0, $w, $h);
+        $x = $point->x - ($w / 2);
+        $y = $point->y - ($h / 2);
+        imagecopy($dst, $icon, (int) $x, (int) $y, 0, 0, $w, $h);
     }
 
     protected function drawText(GdImage $dst, Point $point, array $style, string $text, Color $color)
@@ -263,8 +266,8 @@ class LabelGenerator extends BaseTileGenerator
         $x = $point->x - ($bbox->getWidth() / 2) - $bbox->left;
         $y = $point->y + $bbox->getHeight() - $bbox->bottom;
 
-		$s = imagecolorallocate($dst, 0x00, 0x00, 0x00);
-		$c = $color->allocate($dst);
+        $s = imagecolorallocate($dst, 0x00, 0x00, 0x00);
+        $c = $color->allocate($dst);
         //$c = imagecolorallocate($dst, 0xf0, 0xf0, 0xf0);
 
         // outline - 2px for large fonts, 1px for smaller
@@ -275,11 +278,17 @@ class LabelGenerator extends BaseTileGenerator
             }
         }
         // text
-        imagettftext($dst, $fontSize, 0, (int)$x, (int)$y, $c, $font, $text);
+        imagettftext($dst, $fontSize, 0, (int) $x, (int) $y, $c, $font, $text);
     }
 
-    protected function loadCanvas(GdImage $canvas, int $zoom, int $xTileOffset, int $yTileOffset, int $xTiles, int $yTiles)
-    {
+    protected function loadCanvas(
+        GdImage $canvas,
+        int $zoom,
+        int $xTileOffset,
+        int $yTileOffset,
+        int $xTiles,
+        int $yTiles,
+    ) {
         for ($tx = 0; $tx < $xTiles; $tx++) {
             for ($ty = 0; $ty < $yTiles; $ty++) {
                 $tile = $this->loadTileImage($zoom, $tx + $xTileOffset, $ty + $yTileOffset, false);
@@ -292,7 +301,7 @@ class LabelGenerator extends BaseTileGenerator
                         0,
                         0,
                         TileStorageInterface::TILE_SIZE,
-                        TileStorageInterface::TILE_SIZE
+                        TileStorageInterface::TILE_SIZE,
                     );
                     imagedestroy($tile);
                 }
@@ -300,8 +309,14 @@ class LabelGenerator extends BaseTileGenerator
         }
     }
 
-    protected function saveCanvas(GdImage $canvas, int $zoom, int $xTileOffset, int $yTileOffset, int $xTiles, int $yTiles)
-    {
+    protected function saveCanvas(
+        GdImage $canvas,
+        int $zoom,
+        int $xTileOffset,
+        int $yTileOffset,
+        int $xTiles,
+        int $yTiles,
+    ) {
         for ($tx = 0; $tx < $xTiles; $tx++) {
             for ($ty = 0; $ty < $yTiles; $ty++) {
                 $xTile = $tx + $xTileOffset;
@@ -321,7 +336,7 @@ class LabelGenerator extends BaseTileGenerator
                     $x,
                     $y,
                     TileStorageInterface::TILE_SIZE,
-                    TileStorageInterface::TILE_SIZE
+                    TileStorageInterface::TILE_SIZE,
                 );
 
                 $this->saveTileImage($zoom, $xTile, $yTile, $out);
@@ -391,7 +406,7 @@ class LabelGenerator extends BaseTileGenerator
             3 => array(9, 99),
             // street - 2m/px
             //6 => [10, 99],
-		);
+        );
         if (!isset($iconVisibility[$type])) {
             $type = 'default';
         }
@@ -403,26 +418,43 @@ class LabelGenerator extends BaseTileGenerator
     /**
      * Return true if label type should be visible at zoom level
      */
-    protected function isLabelVisible(int $type, int $zoom): bool {
-        $fMeterPerPixel = 1024 / pow(2,$zoom);
+    protected function isLabelVisible(int $type, int $zoom): bool
+    {
+        $fMeterPerPixel = 1024 / pow(2, $zoom);
         //
-        switch($type) {
-            case CContLandMark::CAPITAL: print("+ CAPITAL: visible $type, $zoom\n"); return $fMeterPerPixel <= 5.0;
-            case CContLandMark::VILLAGE: print("+ VILLAGE: visible $type, $zoom\n"); return $fMeterPerPixel <= 4.0;
-            case CContLandMark::OUTPOST: print("+ OUTPOST: visible $type, $zoom\n"); return $fMeterPerPixel <= 4.0;
-            case CContLandMark::STABLE:  print("+ STABLE: visible $type, $zoom\n");  return $fMeterPerPixel <= 3.5;
+        switch ($type) {
+            case CContLandMark::CAPITAL:
+                print "+ CAPITAL: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 5.0;
+            case CContLandMark::VILLAGE:
+                print "+ VILLAGE: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 4.0;
+            case CContLandMark::OUTPOST:
+                print "+ OUTPOST: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 4.0;
+            case CContLandMark::STABLE:
+                print "+ STABLE: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 3.5;
             //
-            case CContLandMark::REGION:  print("+ REGION: visible $type, $zoom\n");  return $fMeterPerPixel <= 50.0;
-            case CContLandMark::PLACE:   print("+ PLACE: visible $type, $zoom\n");   return $fMeterPerPixel <= 6.0;
-            case CContLandMark::STREET:  print("+ STREET: visible $type, $zoom\n");  return $fMeterPerPixel <= 2.0;
-            default:                     print("+ default $type, $zoom\n");          return true;
+            case CContLandMark::REGION:
+                print "+ REGION: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 50.0;
+            case CContLandMark::PLACE:
+                print "+ PLACE: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 6.0;
+            case CContLandMark::STREET:
+                print "+ STREET: visible $type, $zoom\n";
+                return $fMeterPerPixel <= 2.0;
+            default:
+                print "+ default $type, $zoom\n";
+                return true;
         }
         return false;
     }
 
-	/**
-	* @return array{bold:bool, fontSize:int}
-*/
+    /**
+     * @return array{bold:bool, fontSize:int}
+     */
     protected function getFontSize(int $lmType, int $zoom): array
     {
         // # m/px - ingame setting for showing label
@@ -479,10 +511,10 @@ class LabelGenerator extends BaseTileGenerator
             return $this->defaultColor;
         }
         return new Color($force2color[$force][0], $force2color[$force][1], $force2color[$force][2]);
-	}
+    }
 
-	protected function getTranslation(string $id): string
-	{
-		return $this->translations[$id][$this->lang];
-	}
+    protected function getTranslation(string $id): string
+    {
+        return $this->translations[$id][$this->lang];
+    }
 }

@@ -63,21 +63,15 @@ class BuildMapTiles extends Command
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Select <comment>world</comment> or <comment>server</comment> coordinates for tiles',
-                'world'
+                'world',
             )
-            ->addOption(
-                'mapname',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Select name for output tiles',
-                'atys'
-            )
+            ->addOption('mapname', null, InputOption::VALUE_REQUIRED, 'Select name for output tiles', 'atys')
             ->addOption(
                 'mapdir',
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Path to input map names (world.jpg, newbieland.jpg, etc)',
-                'app/resources/maps/atys'
+                'app/resources/maps/atys',
             )
             ->addOption(
                 'zones',
@@ -91,26 +85,11 @@ class BuildMapTiles extends Command
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Comma separated list of language tiles to generate (en,fr,de,es,ru)',
-                ''
+                '',
             )
-            ->addOption(
-                'with-map',
-                null,
-                InputOption::VALUE_NONE,
-                'Generate map tiles'
-            )
-            ->addOption(
-                'with-city',
-                null,
-                InputOption::VALUE_NONE,
-                'Generate city tiles'
-            )
-            ->addOption(
-                'with-region-color',
-                null,
-                InputOption::VALUE_NONE,
-                'Use region force as region color'
-            );
+            ->addOption('with-map', null, InputOption::VALUE_NONE, 'Generate map tiles')
+            ->addOption('with-city', null, InputOption::VALUE_NONE, 'Generate city tiles')
+            ->addOption('with-region-color', null, InputOption::VALUE_NONE, 'Use region force as region color');
     }
 
     /**
@@ -135,14 +114,14 @@ class BuildMapTiles extends Command
         $lang = $input->getOption('lang');
 
         if ($this->mapdir[0] !== '/') {
-            $this->mapdir = $this->helper->get('app.path').'/'.$this->mapdir;
+            $this->mapdir = $this->helper->get('app.path') . '/' . $this->mapdir;
         }
 
         $withMap = $input->hasParameterOption('--with-map');
         $withCity = $input->hasParameterOption('--with-city');
         $withRegionColors = $input->hasParameterOption('--with-region-color');
 
-        $output->writeln("=======================");
+        $output->writeln('=======================');
         $output->writeln("mode = <info>$mapmode</info>");
         $output->writeln("mapdir = <info>$this->mapdir</info>");
 
@@ -209,7 +188,7 @@ class BuildMapTiles extends Command
      */
     protected function doMaps($maps, $minZoom, $maxZoom, OutputInterface $output)
     {
-        $output->writeln("maps = <info>".join('</info>, <info>', $maps)."</info>");
+        $output->writeln('maps = <info>' . join('</info>, <info>', $maps) . '</info>');
 
         $this->tileStorage->setMapMode($this->mapmode);
         $this->tileStorage->setMapName($this->mapname);
@@ -233,7 +212,7 @@ class BuildMapTiles extends Command
 
         $output->writeln("lang = <info>$lang</info>");
 
-        $resources = $this->helper->get('app.path').'/resources';
+        $resources = $this->helper->get('app.path') . '/resources';
 
         $this->tileStorage->setMapMode($this->mapmode);
         $this->tileStorage->setMapName($mapname);
@@ -252,5 +231,4 @@ class BuildMapTiles extends Command
         $gen->setUseRegionForce($withRegionColors);
         $gen->generate(array($minZoom, $maxZoom));
     }
-
 }

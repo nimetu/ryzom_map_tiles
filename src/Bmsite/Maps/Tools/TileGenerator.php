@@ -48,7 +48,7 @@ class TileGenerator extends BaseTileGenerator
     {
         foreach ($maps as $id => $mapImage) {
             // load map file
-            $mapFilename = $this->mapsDirectory.'/'.$mapImage;
+            $mapFilename = $this->mapsDirectory . '/' . $mapImage;
             if (!file_exists($mapFilename)) {
                 $this->info("- map file '{$id}:{$mapFilename}' not found, skip\n");
                 continue;
@@ -75,7 +75,7 @@ class TileGenerator extends BaseTileGenerator
                 $zoneTop = $zoneBounds->top;
 
                 $this->info(
-                    ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n"
+                    ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n",
                 );
 
                 for ($zoom = $zoomRange[0]; $zoom <= $zoomRange[1]; $zoom++) {
@@ -83,14 +83,19 @@ class TileGenerator extends BaseTileGenerator
                 }
 
                 imagedestroy($mapImage);
-            } catch(\InvalidArgumentException $ex) {
+            } catch (\InvalidArgumentException $ex) {
                 $this->info("exception on map ({$id}): {$ex->getMessage()}\n");
             }
         }
     }
 
-    protected function mapCutter(GdImage $mapImage, int $zoom, int $mapImageWidth, int $mapImageHeight, Bounds $zoneBounds)
-    {
+    protected function mapCutter(
+        GdImage $mapImage,
+        int $zoom,
+        int $mapImageWidth,
+        int $mapImageHeight,
+        Bounds $zoneBounds,
+    ) {
         // map image coords at base zoom
         $zoneLeft = $zoneBounds->left;
         $zoneBottom = $zoneBounds->bottom;
@@ -105,8 +110,8 @@ class TileGenerator extends BaseTileGenerator
         $bottom = $zoneBottom * $zoomScale;
         $right = $zoneRight * $zoomScale;
         $top = $zoneTop * $zoomScale;
-        $width = ($right - $left);
-        $height = ($bottom - $top);
+        $width = $right - $left;
+        $height = $bottom - $top;
 
         $scaleWidth = $mapImageWidth / $width;
         $scaleHeight = $mapImageHeight / $height;
@@ -125,7 +130,7 @@ class TileGenerator extends BaseTileGenerator
         $this->debug(
             "    num tiles ($xTiles, $yTiles), map at ($left, $top):($right, $bottom) on tiles($leftTile, $topTile, %d, %d)\n",
             $rightTile - 1,
-            $bottomTile - 1
+            $bottomTile - 1,
         );
         $x1 = 0;
         $cw = 0;
@@ -142,13 +147,13 @@ class TileGenerator extends BaseTileGenerator
                     pow(2, $zoom) * TileStorageInterface::TILE_SIZE,
                     $zoomScale,
                     $xTile,
-                    $yTile
+                    $yTile,
                 );
                 // tile coords within grid
                 $tx1 = ($leftTile + $xTile) * TileStorageInterface::TILE_SIZE;
                 $ty1 = ($topTile + $yTile) * TileStorageInterface::TILE_SIZE;
-                $tx2 = ($leftTile + $xTile) * TileStorageInterface::TILE_SIZE + TileStorageInterface::TILE_SIZE;
-                $ty2 = ($topTile + $yTile) * TileStorageInterface::TILE_SIZE + TileStorageInterface::TILE_SIZE;
+                $tx2 = (($leftTile + $xTile) * TileStorageInterface::TILE_SIZE) + TileStorageInterface::TILE_SIZE;
+                $ty2 = (($topTile + $yTile) * TileStorageInterface::TILE_SIZE) + TileStorageInterface::TILE_SIZE;
 
                 // image padding in tile
                 $pad_l = 0;
@@ -156,19 +161,23 @@ class TileGenerator extends BaseTileGenerator
                 $pad_r = 0;
                 $pad_b = 0;
                 if ($tx1 < $left) {
-                    $pad_l = (int)floor($left - $tx1);
+                    $pad_l = (int) floor($left - $tx1);
                 }
                 if ($ty1 < $top) {
-                    $pad_t = (int)floor($top - $ty1);
+                    $pad_t = (int) floor($top - $ty1);
                 }
                 if ($tx2 > $right) {
-                    $pad_r = (int)ceil($tx2 - $right);
+                    $pad_r = (int) ceil($tx2 - $right);
                 }
                 if ($ty2 > $bottom) {
-                    $pad_b = (int)ceil($ty2 - $bottom);
+                    $pad_b = (int) ceil($ty2 - $bottom);
                 }
                 $this->debug(
-                    ">> (tile:".($leftTile + $xTile)."/".($topTile + $yTile)." ($xTile,$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n"
+                    '>> (tile:'
+                    . ($leftTile + $xTile)
+                    . '/'
+                    . ($topTile + $yTile)
+                    . " ($xTile,$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n",
                 );
 
                 $dstWidth = TileStorageInterface::TILE_SIZE - $pad_r - $pad_l;
@@ -186,7 +195,7 @@ class TileGenerator extends BaseTileGenerator
                     $pad_l,
                     $pad_t,
                     $dstWidth,
-                    $dstHeight
+                    $dstHeight,
                 );
 
                 $out = $this->loadTileImage($zoom, intval($leftTile + $xTile), intval($topTile + $yTile));
@@ -205,7 +214,7 @@ class TileGenerator extends BaseTileGenerator
                     $dstHeight,
                     /*src*/
                     $cw,
-                    $ch
+                    $ch,
                 );
                 if ($this->debug) {
                     $c = imagecolorallocatealpha($out, 255, 0, 0, 50);
@@ -219,5 +228,4 @@ class TileGenerator extends BaseTileGenerator
             $x1 += $cw;
         }
     }
-
 }
