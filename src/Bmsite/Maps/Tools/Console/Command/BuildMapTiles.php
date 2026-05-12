@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Bmsite\Maps\Tools\Console\Command;
 
 use Bmsite\Maps\MapProjection;
+use Bmsite\Maps\Tiles\TileStorageInterface;
 use Bmsite\Maps\Tools\Console\Helper\ResourceHelper;
 use Bmsite\Maps\Tools\LabelGenerator;
 use Bmsite\Maps\Tools\TileGenerator;
@@ -26,32 +27,37 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class BuildMapTiles extends Command
 {
-    /** @var array */
-    protected $config;
+    /**
+     * @var array{
+     *   map-zoom: array{min:int,max:int},
+     *   city-zoom: array{min:int,max:int},
+     *   text-zoom: array{min:int,max:int},
+     *   maps_path: string,
+     *   maps: array<string,string>,
+     *   labels: array<string,array<string,bool>>|bool,
+     *   server-labels: array<string,bool|array<string,bool>>,
+     *   zones: array<string,string>,
+     *   cities: array<string,string>,
+     * }
+     */
+    protected array $config;
 
-    /** @var  MapProjection */
-    protected $proj;
+    protected MapProjection $proj;
 
-    /** @var ResourceHelper */
-    protected $helper;
+    protected ResourceHelper $helper;
 
-    /** @var string */
-    protected $mapdir;
+    protected string $mapdir;
 
-    /** @var string */
-    protected $mapmode;
+    protected string $mapmode;
 
-    /** @var string */
-    protected $mapname;
+    protected string $mapname;
 
-    /** @var bool */
-    protected $useRegionForce;
+    protected bool $useRegionForce;
 
-    /** @var \Bmsite\Maps\Tiles\FileTileStorage */
-    protected $tileStorage;
+    protected TileStorageInterface $tileStorage;
 
     /** @var string[] */
-    protected $zones = array();
+    protected array $zones = [];
 
     protected function configure()
     {
@@ -59,37 +65,42 @@ class BuildMapTiles extends Command
             ->setName('bmmaps:tiles')
             ->setDescription('Build map tiles')
             ->addOption(
-                'mapmode',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Select <comment>world</comment> or <comment>server</comment> coordinates for tiles',
-                'world',
-            )
-            ->addOption('mapname', null, InputOption::VALUE_REQUIRED, 'Select name for output tiles', 'atys')
-            ->addOption(
-                'mapdir',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Path to input map names (world.jpg, newbieland.jpg, etc)',
-                'app/resources/maps/atys',
+                name: 'mapmode',
+                mode: InputOption::VALUE_REQUIRED,
+                description: 'Select <comment>world</comment> or <comment>server</comment> coordinates for tiles',
+                default: 'world',
             )
             ->addOption(
-                'zones',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Comma separated list of zones to generate',
-                join(',', $this->zones),
+                name: 'mapname',
+                mode: InputOption::VALUE_REQUIRED,
+                description: 'Select name for output tiles',
+                default: 'atys',
             )
             ->addOption(
-                'lang',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Comma separated list of language tiles to generate (en,fr,de,es,ru)',
-                '',
+                name: 'mapdir',
+                mode: InputOption::VALUE_REQUIRED,
+                description: 'Path to input map names (world.jpg, newbieland.jpg, etc)',
+                default: 'app/resources/maps/atys',
             )
-            ->addOption('with-map', null, InputOption::VALUE_NONE, 'Generate map tiles')
-            ->addOption('with-city', null, InputOption::VALUE_NONE, 'Generate city tiles')
-            ->addOption('with-region-color', null, InputOption::VALUE_NONE, 'Use region force as region color');
+            ->addOption(
+                name: 'zones',
+                mode: InputOption::VALUE_REQUIRED,
+                description: 'Comma separated list of zones to generate',
+                default: join(',', $this->zones),
+            )
+            ->addOption(
+                name: 'lang',
+                mode: InputOption::VALUE_REQUIRED,
+                description: 'Comma separated list of language tiles to generate (en,fr,de,es,ru)',
+                default: '',
+            )
+            ->addOption(name: 'with-map', mode: InputOption::VALUE_NONE, description: 'Generate map tiles')
+            ->addOption(name: 'with-city', mode: InputOption::VALUE_NONE, description: 'Generate city tiles')
+            ->addOption(
+                name: 'with-region-color',
+                mode: InputOption::VALUE_NONE,
+                description: 'Use region force as region color',
+            );
     }
 
     /**
@@ -97,59 +108,73 @@ class BuildMapTiles extends Command
      * @param OutputInterface $output
      *
      * @throws \InvalidArgumentException
-     * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->helper = $this->getHelper('resource');
+        /** @var ResourceHelper */
+        $helper = $this->getHelper('resource');
+        $this->helper = $helper;
 
-        $mapmode = strtolower($input->getOption('mapmode'));
-        if (!in_array($mapmode, array('world', 'server'), true)) {
+        /** @var string */
+        $mapmode = $input->getOption('mapmode');
+        if (!in_array($mapmode, ['world', 'server'], true)) {
             throw new \InvalidArgumentException("--mapmode must be 'world' or 'server'");
         }
 
+        /** @var string */
         $mapname = $input->getOption('mapname');
 
-        $this->mapdir = $input->getOption('mapdir');
-        $lang = $input->getOption('lang');
-
-        if ($this->mapdir[0] !== '/') {
-            $this->mapdir = $this->helper->get('app.path') . '/' . $this->mapdir;
+        /** @var string */
+        $mapdir = $input->getOption('mapdir');
+        if ($mapdir[0] !== '/') {
+            /** @var string */
+            $apppath = $this->helper->get('app.path');
+            $mapdir = $apppath . '/' . $mapdir;
         }
+        $this->mapdir = $mapdir;
+
+        /** @var string */
+        $lang = $input->getOption('lang');
 
         $withMap = $input->hasParameterOption('--with-map');
         $withCity = $input->hasParameterOption('--with-city');
         $withRegionColors = $input->hasParameterOption('--with-region-color');
 
         $output->writeln('=======================');
-        $output->writeln("mode = <info>$mapmode</info>");
-        $output->writeln("mapdir = <info>$this->mapdir</info>");
+        $output->writeln("mode = <info>{$mapmode}</info>");
+        $output->writeln("mapdir = <info>{$mapdir}</info>");
 
         if (!$withMap && !$withCity && empty($lang)) {
-            throw new \InvalidArgumentException("Use --with-map, --with-city, --lang options\n");
+            throw new \InvalidArgumentException("One of --with-map, --with-city, --lang option must be set.\n");
         }
 
+        // @mago-expect analysis:mixed-property-type-coercion
         $this->config = $this->helper->get('map-config');
 
         $this->proj = new MapProjection();
+        // @mago-expect analysis:mixed-argument
         $this->proj->setServerZones($this->helper->get('server.json.array'));
 
         $maps = $this->config['maps'];
         if ($mapmode === 'world') {
+            // @mago-expect analysis:mixed-argument
             $this->proj->setWorldZones($this->helper->get('world.json.array'));
         } else {
             // include individual zone map
             $maps = array_merge($maps, $this->config['zones']);
             unset($maps['world']);
 
-            $this->proj->setWorldZones(array('grid' => array(array(0, 47520), array(108000, 0))));
+            $this->proj->setWorldZones(['grid' => [[0, 47520], [108000, 0]]]);
         }
 
         $this->mapmode = $mapmode;
         $this->mapname = $mapname;
 
-        $this->tileStorage = $this->helper->get('tilestorage');
+        /** @var TileStorageInterface */
+        $ts = $this->helper->get('tilestorage');
+        $this->tileStorage = $ts;
 
+        /** @var string */
         $zones = $input->getOption('zones');
         if (!empty($zones)) {
             $this->zones = explode(',', $zones);
@@ -158,26 +183,28 @@ class BuildMapTiles extends Command
         // generate tiles for world map zone placement
         if ($withMap) {
             // map tiles
-            $minMapZoom = $this->config['map-zoom']['min'];
-            $maxMapZoom = $this->config['map-zoom']['max'];
+            $minMapZoom = (int) $this->config['map-zoom']['min'];
+            $maxMapZoom = (int) $this->config['map-zoom']['max'];
             $this->doMaps($maps, $minMapZoom, $maxMapZoom, $output);
         }
         if ($withCity) {
             // city map on world image
-            $minCityZoom = $this->config['city-zoom']['min'];
-            $maxCityZoom = $this->config['city-zoom']['max'];
+            $minCityZoom = (int) $this->config['city-zoom']['min'];
+            $maxCityZoom = (int) $this->config['city-zoom']['max'];
             $this->doMaps($this->config['cities'], $minCityZoom, $maxCityZoom, $output);
         }
 
         if (!empty($lang)) {
             // text tiles
-            $minTextZoom = $this->config['text-zoom']['min'];
-            $maxTextZoom = $this->config['text-zoom']['max'];
+            $minTextZoom = (int) $this->config['text-zoom']['min'];
+            $maxTextZoom = (int) $this->config['text-zoom']['max'];
             $languages = explode(',', $lang);
             foreach ($languages as $l) {
                 $this->doTextTiles($l, $withRegionColors, $minTextZoom, $maxTextZoom, $output);
             }
         }
+
+        return 0;
     }
 
     /**
@@ -196,7 +223,8 @@ class BuildMapTiles extends Command
 
         $gen = new TileGenerator($this->mapdir, $this->proj);
         $gen->setTileStorage($this->tileStorage);
-        $gen->generate(array($minZoom, $maxZoom), $maps);
+        // @mago-expect analysis:less-specific-argument
+        $gen->generate([$minZoom, $maxZoom], $maps);
     }
 
     /**
@@ -210,8 +238,9 @@ class BuildMapTiles extends Command
     {
         $mapname = "lang_{$lang}";
 
-        $output->writeln("lang = <info>$lang</info>");
+        $output->writeln("lang = <info>{$lang}</info>");
 
+        // @mago-expect analysis:mixed-operand
         $resources = $this->helper->get('app.path') . '/resources';
 
         $this->tileStorage->setMapMode($this->mapmode);
@@ -221,14 +250,17 @@ class BuildMapTiles extends Command
         $gen = new LabelGenerator($this->proj, $resources);
         $gen->setTileStorage($this->tileStorage);
 
+        /** @var array<string,array<string,bool>|bool> $filter */
         $filter = $this->config['labels'];
         if ($this->mapmode === 'server') {
-            $filter = isset($this->config['server-labels']) ? $this->config['server-labels'] : array();
+            $filter = isset($this->config['server-labels']) ? $this->config['server-labels'] : [];
         }
+
+        // @mago-expect analysis:mixed-argument
         $gen->loadLabels($this->helper->get('labels.json.array'), $filter);
 
         $gen->setLanguage($lang);
         $gen->setUseRegionForce($withRegionColors);
-        $gen->generate(array($minZoom, $maxZoom));
+        $gen->generate([$minZoom, $maxZoom]);
     }
 }

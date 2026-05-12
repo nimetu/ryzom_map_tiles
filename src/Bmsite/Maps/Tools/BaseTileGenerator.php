@@ -39,7 +39,7 @@ abstract class BaseTileGenerator
         int $height = TileStorageInterface::TILE_SIZE,
     ): GdImage {
         $out = imagecreatetruecolor($width, $height);
-        $tc = imagecolorallocatealpha($out, 0, 0, 0, 127);
+        $tc = (int) imagecolorallocatealpha($out, 0, 0, 0, 127);
         imagefill($out, 0, 0, $tc);
         imagesavealpha($out, true);
 
@@ -67,7 +67,7 @@ abstract class BaseTileGenerator
     {
         $path = dirname($imgFile);
         if (!file_exists($path) && !mkdir($path, 0o775, true)) {
-            die("- unable to create destination directory ($path), abort\n");
+            die("- unable to create destination directory ({$path}), abort\n");
         }
 
         if (substr($imgFile, -3) === 'jpg') {
@@ -75,7 +75,6 @@ abstract class BaseTileGenerator
         } else {
             imagepng($img, $imgFile, 9);
         }
-        imagedestroy($img);
     }
 
     /**
@@ -103,12 +102,12 @@ abstract class BaseTileGenerator
     /**
      * Generate map tiles
      *
-     * @param array $zoomRange [ min, max]
-     * @param array $maps [ id => map.png ]
+     * @param array{int,int} $zoomRange [ min, max]
+     * @param array<string,string> $maps [ id => map.png ]
      *
      * @return void
      */
-    abstract public function generate(array $zoomRange, array $maps = array());
+    abstract public function generate(array $zoomRange, array $maps = []);
 
     protected function info(string $msg, string|int|float ...$args)
     {

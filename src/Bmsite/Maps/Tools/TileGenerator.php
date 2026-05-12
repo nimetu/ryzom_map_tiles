@@ -41,8 +41,8 @@ class TileGenerator extends BaseTileGenerator
     /**
      * Generate map tiles
      *
-     * @param array $zoomRange [ min, max]
-     * @param array $maps [ id => map.png ]
+     * @param array{int,int} $zoomRange [ min, max]
+     * @param array<string,string> $maps [ id => map.png ]
      */
     public function generate(array $zoomRange, array $maps = [])
     {
@@ -57,7 +57,7 @@ class TileGenerator extends BaseTileGenerator
             $this->info("+ loading map {$mapFilename}\n");
             $mapImage = $this->loadImage($mapFilename);
             if (!$mapImage) {
-                $this->info("error: map '$id' image '{$mapFilename}' not found\n");
+                $this->info("error: map '{$id}' image '{$mapFilename}' not found\n");
                 continue;
             }
 
@@ -75,14 +75,12 @@ class TileGenerator extends BaseTileGenerator
                 $zoneTop = $zoneBounds->top;
 
                 $this->info(
-                    ">> map size ($mapImageWidth, $mapImageHeight), position ($zoneLeft, $zoneTop, $zoneRight, $zoneBottom)\n",
+                    ">> map size ({$mapImageWidth}, {$mapImageHeight}), position ({$zoneLeft}, {$zoneTop}, {$zoneRight}, {$zoneBottom})\n",
                 );
 
                 for ($zoom = $zoomRange[0]; $zoom <= $zoomRange[1]; $zoom++) {
                     $this->mapCutter($mapImage, $zoom, $mapImageWidth, $mapImageHeight, $zoneBounds);
                 }
-
-                imagedestroy($mapImage);
             } catch (\InvalidArgumentException $ex) {
                 $this->info("exception on map ({$id}): {$ex->getMessage()}\n");
             }
@@ -115,7 +113,7 @@ class TileGenerator extends BaseTileGenerator
 
         $scaleWidth = $mapImageWidth / $width;
         $scaleHeight = $mapImageHeight / $height;
-        $this->debug("($zoom) map size ($width, $height), scaled (%.3f, %.3f)\n", $scaleWidth, $scaleHeight);
+        $this->debug("({$zoom}) map size ({$width}, {$height}), scaled (%.3f, %.3f)\n", $scaleWidth, $scaleHeight);
 
         // tiles this image lands
         $leftTile = floor($left / TileStorageInterface::TILE_SIZE);
@@ -128,7 +126,7 @@ class TileGenerator extends BaseTileGenerator
         $xTiles = $rightTile - $leftTile;
         $yTiles = $bottomTile - $topTile;
         $this->debug(
-            "    num tiles ($xTiles, $yTiles), map at ($left, $top):($right, $bottom) on tiles($leftTile, $topTile, %d, %d)\n",
+            "    num tiles ({$xTiles}, {$yTiles}), map at ({$left}, {$top}):({$right}, {$bottom}) on tiles({$leftTile}, {$topTile}, %d, %d)\n",
             $rightTile - 1,
             $bottomTile - 1,
         );
@@ -140,11 +138,11 @@ class TileGenerator extends BaseTileGenerator
             for ($yTile = 0; $yTile < $yTiles; $yTile++) {
                 $mem = memory_get_usage();
                 $this->info(
-                    "[$mem] - zoom % 2d (% 5dx% 5d @ %8d grid, mul=%.5f), tile % 3dx% 3d\033[K\r",
+                    "[{$mem}] - zoom % 2d (% 5dx% 5d @ %8d grid, mul=%.5f), tile % 3dx% 3d\033[K\r",
                     $zoom,
                     $width,
                     $height,
-                    pow(2, $zoom) * TileStorageInterface::TILE_SIZE,
+                    intval(pow(2, $zoom)) * TileStorageInterface::TILE_SIZE,
                     $zoomScale,
                     $xTile,
                     $yTile,
@@ -177,7 +175,7 @@ class TileGenerator extends BaseTileGenerator
                     . ($leftTile + $xTile)
                     . '/'
                     . ($topTile + $yTile)
-                    . " ($xTile,$yTile): (tx1:$tx1,ty1:$ty1):(tx2:$tx2,ty2:$ty2), padding ($pad_l, $pad_t):($pad_r, $pad_b)\n",
+                    . " ({$xTile},{$yTile}): (tx1:{$tx1},ty1:{$ty1}):(tx2:{$tx2},ty2:{$ty2}), padding ({$pad_l}, {$pad_t}):({$pad_r}, {$pad_b})\n",
                 );
 
                 $dstWidth = TileStorageInterface::TILE_SIZE - $pad_r - $pad_l;
@@ -198,6 +196,7 @@ class TileGenerator extends BaseTileGenerator
                     $dstHeight,
                 );
 
+                /** @var GdImage $out */
                 $out = $this->loadTileImage($zoom, intval($leftTile + $xTile), intval($topTile + $yTile));
 
                 imagecopyresampled(
@@ -217,7 +216,7 @@ class TileGenerator extends BaseTileGenerator
                     $ch,
                 );
                 if ($this->debug) {
-                    $c = imagecolorallocatealpha($out, 255, 0, 0, 50);
+                    $c = (int) imagecolorallocatealpha($out, 255, 0, 0, 50);
                     imagerectangle($out, $pad_l, $pad_t, $pad_l + $dstWidth, $pad_t + $dstHeight, $c);
                 }
 

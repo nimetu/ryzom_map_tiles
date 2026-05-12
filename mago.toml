@@ -1,0 +1,60 @@
+#:schema https://mago.carthage.software/1.26.0/schema.json
+# Welcome to Mago!
+# For full documentation, see https://mago.carthage.software/tools/overview
+version = "1"
+php-version = "8.3.0"
+
+[source]
+workspace = "."
+paths = ["src"]
+includes = ["vendor"]
+excludes = []
+
+[source.glob]
+literal-separator = true
+
+[formatter]
+print-width = 120
+tab-width = 4
+use-tabs = false
+
+[linter]
+integrations = ["symfony"]
+
+[linter.rules]
+no-isset = { enabled = false }
+no-else-clause = { enabled = false }
+no-empty = { enabled = false }
+no-boolean-flag-parameter = { enabled = false }
+no-alias-function = { enabled = false }
+tagged-todo = { enabled = false }
+excessive-parameter-list = { enabled = false }
+too-many-properties = { enabled = false }
+too-many-methods = { enabled = false }
+ambiguous-function-call = { enabled = false }
+literal-named-argument = { enabled = false }
+cyclomatic-complexity = { enabled = false }
+kan-defect = { enabled = false }
+halstead = { enabled = false }
+no-empty-comment = { enabled = false }
+readable-literal = { enabled = false }
+assertion-style = { style = "this" }
+
+[analyzer]
+plugins = []
+find-unused-definitions = true
+find-unused-expressions = false
+analyze-dead-code = false
+memoize-properties = true
+allow-possibly-undefined-array-keys = true
+check-throws = false
+unchecked-exceptions = ["Error", "LogicException"]
+unchecked-exception-classes = []
+check-missing-override = false
+find-unused-parameters = false
+strict-list-index-checks = false
+strict-array-index-existence = false
+allow-array-truthy-operand = false
+no-boolean-literal-comparison = false
+check-missing-type-hints = false
+register-super-globals = true
